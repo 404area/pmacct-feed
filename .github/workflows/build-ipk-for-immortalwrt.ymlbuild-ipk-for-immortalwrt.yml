@@ -25,14 +25,24 @@ jobs:
         run: |
           mkdir -p sdk/package/network/utils/pmacct
           cp -r openwrt-package/pmacct/* sdk/package/network/utils/pmacct/
-          # 如果需要额外依赖（如 libmnl），这里可以先 update feeds 但 ImmortalWrt 23.05 SDK 基本够用
+
+      - name: Update feeds and install dependencies
+        working-directory: ./sdk
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install libpcap zlib libmnl libcap libpthread librt  # pmacct 的核心依赖
+
+      - name: Generate default config non-interactively
+        working-directory: ./sdk
+        run: |
+          make defconfig
 
       - name: Compile pmacct package
         working-directory: ./sdk
         run: |
-          make package/pmacct/compile V=s -j$(nproc) || true   # || true 防止 hash 错就停
-          # 打印 hash 错误（方便第一次调试）
-          if grep -q "HASH uses the value" ../log.txt 2>/dev/null; then cat ../log.txt; fi
+          make package/pmacct/compile V=s -j$(nproc) || true
+          # 如果有错误，打印最后 50 行日志方便 debug（hash 等）
+          tail -n 50 staging_dir/host/logs/package/network/utils/pmacct/compile.txt || true
 
       - name: Upload ipk artifact
         uses: actions/upload-artifact@v4
