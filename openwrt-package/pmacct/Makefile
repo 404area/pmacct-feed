@@ -6,7 +6,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/pmacct/pmacct/releases/download/$(PKG_VERSION)/
-PKG_HASH:=94185c33d659772035c63be0a82601bb9eb064fb4be1d68ba279b47204b2750a   # 第一次运行 Action 会告诉你真实 hash，复制替换
+PKG_HASH:=94185c33d659772035c63be0a82601bb9eb064fb4be1d68ba279b47204b2750a
 
 PKG_MAINTAINER:=YourName
 PKG_LICENSE:=GPL-2.0-or-later
