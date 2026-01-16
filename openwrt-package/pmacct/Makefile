@@ -11,12 +11,13 @@ PKG_HASH:=94185c33d659772035c63be0a82601bb9eb064fb4be1d68ba279b47204b2750a
 PKG_MAINTAINER:=YourName
 PKG_LICENSE:=GPL-2.0-or-later
 
-PKG_BUILD_DEPENDS:=zlib libpcap libpthread
+PKG_BUILD_DEPENDS:=zlib libpcap
 PKG_BUILD_PARALLEL:=1
 PKG_FIXUP:=autoreconf
 
-TARGET_CFLAGS += -Wno-error
-TARGET_CXXFLAGS += -Wno-error
+# 针对 musl 的 #warning 问题，关闭 cpp 相关的 warning-as-error
+TARGET_CFLAGS += -Wno-error=cpp -Wno-error
+TARGET_CXXFLAGS += -Wno-error=cpp -Wno-error
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -25,7 +26,7 @@ define Package/pmacct
   CATEGORY:=Network
   TITLE:=pmacct - passive network monitoring (NetFlow/sFlow/IPFIX/BGP...)
   URL:=https://github.com/pmacct/pmacct
-  DEPENDS:=+libpcap +zlib +libpthread +librt \
+  DEPENDS:=+libpcap +zlib +librt \
            +PACKAGE_pmacct-with-nfacctd:libmnl \
            +PACKAGE_pmacct-with-uacctd:libcap
 endef
@@ -41,6 +42,9 @@ define Build/Configure
 		--enable-uacctd \
 		--enable-ulog \
 		--disable-debug \
+		CFLAGS="$(TARGET_CFLAGS)" \
+		CXXFLAGS="$(TARGET_CXXFLAGS)" \
+		LDFLAGS="$(TARGET_LDFLAGS)" \
 	)
 endef
 
@@ -50,7 +54,7 @@ define Package/pmacct/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/sfacctd $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/uacctd $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/pmacct $(1)/usr/bin/
-	# 如果需要 BGP 等，额外加：
+	# 如果以后需要 BGP 等其他 daemon，可在此添加：
 	# $(INSTALL_BIN) $(PKG_BUILD_DIR)/src/pmbgpd $(1)/usr/bin/
 endef
 
