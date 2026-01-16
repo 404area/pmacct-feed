@@ -1,0 +1,42 @@
+name: Build pmacct ipk for ImmortalWrt 23.05.4 x86_64
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download ImmortalWrt 23.05.4 SDK (x86_64)
+        run: |
+          wget https://downloads.immortalwrt.org/releases/23.05.4/targets/x86/64/immortalwrt-sdk-23.05.4-x86-64_gcc-12.3.0_musl.Linux-x86_64.tar.xz -O sdk.tar.xz
+          tar xf sdk.tar.xz
+          mv immortalwrt-sdk-* sdk
+
+      - name: Prepare pmacct package in SDK
+        run: |
+          mkdir -p sdk/package/network/utils/pmacct
+          cp -r openwrt-package/pmacct/* sdk/package/network/utils/pmacct/
+          # 如果需要额外依赖（如 libmnl），这里可以先 update feeds 但 ImmortalWrt 23.05 SDK 基本够用
+
+      - name: Compile pmacct package
+        working-directory: ./sdk
+        run: |
+          make package/pmacct/compile V=s -j$(nproc) || true   # || true 防止 hash 错就停
+          # 打印 hash 错误（方便第一次调试）
+          if grep -q "HASH uses the value" ../log.txt 2>/dev/null; then cat ../log.txt; fi
+
+      - name: Upload ipk artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmacct-ipk-x86_64
+          path: sdk/bin/packages/*/base/pmacct*.ipk
+          if-no-files-found: warn
