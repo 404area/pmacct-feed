@@ -15,6 +15,9 @@ PKG_BUILD_DEPENDS:=zlib libpcap libpthread
 PKG_BUILD_PARALLEL:=1
 PKG_FIXUP:=autoreconf
 
+TARGET_CFLAGS += -Wno-error
+TARGET_CXXFLAGS += -Wno-error
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/pmacct
